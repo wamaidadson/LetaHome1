@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Tenant - Leta Homes Agency</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-user-plus"></i> Add New Tenant</h2>
+                <a href="plots.html" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Plots
+                </a>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8 offset-md-2">
+                    <div class="table-container">
+                        <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                        
+                        <form id="add-tenant-form">
+                            <div class="mb-3">
+                                <label for="plot_id" class="form-label">Select Plot *</label>
+                                <select class="form-control" id="plot_id" name="plot_id" required>
+                                    <option value="">-- Select Plot --</option>
+                                </select>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="tenant_name" class="form-label">Tenant Name *</label>
+                                    <input type="text" class="form-control" id="tenant_name" name="tenant_name" required>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone_number" class="form-label">Phone Number</label>
+                                    <input type="text" class="form-control" id="phone_number" name="phone_number">
+                                </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="house_number" class="form-label">House Number *</label>
+                                    <input type="text" class="form-control" id="house_number" name="house_number" required>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="house_type" class="form-label">House Type *</label>
+                                    <select class="form-control" id="house_type" name="house_type" required>
+                                        <option value="Bedsitter">Bedsitter</option>
+                                        <option value="One Bedroom">One Bedroom</option>
+                                        <option value="Two Bedroom">Two Bedroom</option>
+                                    </select>
+                                </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="rent_amount" class="form-label">Rent Amount (KSh) *</label>
+                                    <input type="number" class="form-control" id="rent_amount" name="rent_amount" required>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="deposit_amount" class="form-label">Deposit Amount (KSh)</label>
+                                    <input type="number" class="form-control" id="deposit_amount" name="deposit_amount" value="0">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="commission_percentage" class="form-label">Commission Percentage (%) *</label>
+                                    <input type="number" class="form-control" id="commission_percentage" name="commission_percentage" value="10" required>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="deposit_paid" class="form-label">Deposit Paid?</label>
+                                    <select class="form-control" id="deposit_paid" name="deposit_paid">
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="move_in_date" class="form-label">Move In Date *</label>
+                                <input type="date" class="form-control" id="move_in_date" name="move_in_date" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Add Tenant
+                            </button>
+                        </form>
+                    </div>
+            </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/script.js"></script>
+    
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user_id')) {
+            window.location.href = 'login.html';
+        }
+        
+        // Load sidebar
+        $('#sidebar-container').load('sidebar.html');
+        
+        // Set default date
+        document.getElementById('move_in_date').value = new Date().toISOString().split('T')[0];
+        
+        // Get plot_id from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const plotIdParam = urlParams.get('plot_id');
+        
+        // Load plots
+        function loadPlots() {
+            fetch('../php/add_tenant.php?action=plots')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('plot_id');
+                    data.plots.forEach(plot => {
+                        const option = document.createElement('option');
+                        option.value = plot.id;
+                        option.textContent = plot.plot_name;
+                        if (plotIdParam && plot.id == plotIdParam) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading plots:', error));
+        }
+        
+        loadPlots();
+        
+        // Handle form submission
+        document.getElementById('add-tenant-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('../php/add_tenant.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const plotId = formData.get('plot_id');
+                    window.location.href = 'plot_details.html?id=' + plotId + '&msg=tenant_added';
+                } else {
+                    document.getElementById('error-message').textContent = data.message;
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('error-message').textContent = 'An error occurred. Please try again.';
+                document.getElementById('error-message').style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>

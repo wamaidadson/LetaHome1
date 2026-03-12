@@ -1,0 +1,362 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --success-color: #27ae60;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+    --light-bg: #ecf0f1;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--light-bg);
+    overflow-x: hidden;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 250px;
+    background: var(--primary-color);
+    color: white;
+    transition: all 0.3s;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.sidebar-header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.sidebar-header p {
+    margin: 5px 0 0;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.sidebar-menu {
+    padding: 20px 0;
+}
+
+.sidebar-menu a {
+    display: block;
+    padding: 12px 20px;
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.sidebar-menu a:hover,
+.sidebar-menu a.active {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    padding-left: 30px;
+}
+
+.sidebar-menu a i {
+    margin-right: 10px;
+    width: 20px;
+}
+
+.sidebar-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 15px;
+    text-align: center;
+    font-size: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 250px;
+    padding: 20px;
+    min-height: 100vh;
+    transition: all 0.3s;
+    width: calc(100% - 250px);
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.dashboard-container .dashboard-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Chart Container */
+.chart-container {
+    width: 100%;
+    height: 400px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Force charts to stay inside container */
+.chart-container canvas{
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+}
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+
+.card-value {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 10px 0 5px;
+}
+
+.card-label {
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+/* Tables */
+.table-container {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+/* Prevent table overflow */
+table{
+    width:100%;
+    table-layout: fixed;
+}
+
+/* Center table */
+.table-container table {
+    margin: 0 auto;
+    width: 100%;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Buttons */
+.btn-action {
+    padding: 5px 10px;
+    margin: 0 2px;
+    border-radius: 5px;
+}
+
+.btn-print {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-print:hover {
+    background: #34495e;
+    color: white;
+}
+
+/* Receipt Styles */
+.receipt-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.receipt-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.receipt-header h2 {
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+.receipt-header p {
+    color: #7f8c8d;
+}
+
+.receipt-details {
+    margin-bottom: 30px;
+}
+
+.receipt-table {
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.receipt-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.receipt-table td:first-child {
+    font-weight: bold;
+    width: 40%;
+}
+
+.receipt-footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+    color: #7f8c8d;
+}
+
+/* Status Badges */
+.badge-active {
+    background: var(--success-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.badge-moved {
+    background: var(--danger-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.badge-paid {
+    background: var(--success-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.badge-unpaid {
+    background: var(--danger-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+/* Alerts */
+.alert-reminder {
+    background: #fff3cd;
+    border-left: 4px solid var(--warning-color);
+    color: #856404;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.alert-reminder i {
+    margin-right: 10px;
+    color: var(--warning-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+
+    .sidebar {
+        left: -250px;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .main-content.active {
+        margin-left: 250px;
+    }
+    
+    .dashboard-card {
+        margin-bottom: 15px;
+    }
+}
+
+/* Print Styles */
+@media print {
+
+    .sidebar,
+    .no-print,
+    .btn,
+    .dataTables_filter,
+    .dataTables_length,
+    .dataTables_paginate {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+    
+    .receipt-container {
+        box-shadow: none;
+        padding: 0;
+    }
+}
+

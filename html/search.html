@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search - Leta Homes Agency</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-search"></i> Search</h2>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8 offset-md-2">
+                    <div class="table-container">
+                        <form" class="mb id="search-form-4">
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-lg" 
+                                       name="search" id="search-input" placeholder="Search by tenant name, ID, house number, phone, receipt number..." 
+                                       value="">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i> Search
+                                </button>
+                            </div>
+                            <div class="form-text mt-2">
+                                <small>You can search for: Tenant Name, Tenant ID, House Number, Phone Number, Receipt Number</small>
+                            </div>
+                        </form>
+                        
+                        <div id="search-results-section" style="display: none;">
+                            <h5 class="mb-3">Search Results for "<span id="search-term"></span>"</h5>
+                            
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Result Type</th>
+                                        <th>Tenant ID</th>
+                                        <th>Tenant Name</th>
+                                        <th>Plot</th>
+                                        <th>House No</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="search-results">
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div id="no-results" class="alert alert-info" style="display: none;">
+                            No results found for "<span id="no-results-term"></span>"
+                        </div>
+                </div>
+        </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="../assets/js/script.js"></script>
+    
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user_id')) {
+            window.location.href = 'login.html';
+        }
+        
+        // Load sidebar
+        $('#sidebar-container').load('sidebar.html');
+        
+        // Check for search param in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchTerm = urlParams.get('search');
+        
+        if (searchTerm) {
+            document.getElementById('search-input').value = searchTerm;
+            performSearch(searchTerm);
+        }
+        
+        // Handle form submission
+        document.getElementById('search-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const searchTerm = document.getElementById('search-input').value;
+            performSearch(searchTerm);
+        });
+        
+        function performSearch(searchTerm) {
+            if (!searchTerm) return;
+            
+            fetch('../php/search.php?search=' + encodeURIComponent(searchTerm))
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('search-term').textContent = searchTerm;
+                    document.getElementById('no-results-term').textContent = searchTerm;
+                    
+                    const resultsSection = document.getElementById('search-results-section');
+                    const noResults = document.getElementById('no-results');
+                    
+                    if (data.results && data.results.length > 0) {
+                        resultsSection.style.display = 'block';
+                        noResults.style.display = 'none';
+                        
+                        const tbody = document.getElementById('search-results');
+                        tbody.innerHTML = data.results.map(result => {
+                            let badgeClass = result.result_type === 'Tenant' ? 'badge-active' : 
+                                           (result.result_type === 'Payment' ? 'badge-paid' : 'badge-warning');
+                            return `
+                                <tr>
+                                    <td><span class="badge ${badgeClass}">${result.result_type}</span></td>
+                                    <td>${result.tenant_id}</td>
+                                    <td>${result.tenant_name}</td>
+                                    <td>${result.plot_name}</td>
+                                    <td>${result.house_number}</td>
+                                    <td>
+                                        <a href="tenant_statement.html?id=${result.id}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-file-invoice"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                    } else {
+                        resultsSection.style.display = 'none';
+                        noResults.style.display = 'block';
+                    }
+                })
+                .catch(error => console.error('Error searching:', error));
+        }
+    </script>
+</body>
+</html>

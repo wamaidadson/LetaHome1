@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plots Management - Leta Homes Agency</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .plots-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .summary-card.total-plots {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        .summary-card.total-tenants {
+            background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+        }
+        
+        .summary-card.monthly-rent {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+        
+        .summary-card.occupied {
+            background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+        }
+        
+        .summary-card .icon {
+            font-size: 40px;
+            opacity: 0.3;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+        
+        .summary-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .summary-card .label {
+            font-size: 14px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .summary-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Enhanced Table Styles */
+        .plots-table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .plots-table-container .table-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px 25px;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .plots-table-container .table-header h5 {
+            margin: 0;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .plots-table-container .table {
+            margin-bottom: 0;
+        }
+        
+        .plots-table-container .table thead th {
+            background: #f8f9fa;
+            color: #495057;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #dee2e6;
+            padding: 15px;
+        }
+        
+        .plots-table-container .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        
+        .plots-table-container .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .plots-table-container .table tbody tr {
+            transition: background 0.2s;
+        }
+        
+        /* Plot Card in Table */
+        .plot-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .plot-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .plot-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .location-text {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        /* Stats in table */
+        .tenant-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #e8f5e9;
+            color: #27ae60;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .rent-amount {
+            font-weight: 600;
+            color: #9b59b6;
+        }
+        
+        /* Enhanced Action Buttons */
+        .btn-action {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .btn-action:hover {
+            transform: scale(1.1);
+        }
+        
+        .btn-view {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: none;
+        }
+        
+        .btn-view:hover {
+            background: #1976d2;
+            color: white;
+        }
+        
+        .btn-edit {
+            background: #fff3e0;
+            color: #f57c00;
+            border: none;
+        }
+        
+        .btn-edit:hover {
+            background: #f57c00;
+            color: white;
+        }
+        
+        .btn-delete {
+            background: #ffebee;
+            color: #c62828;
+            border: none;
+        }
+        
+        .btn-delete:hover {
+            background: #c62828;
+            color: white;
+        }
+        
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .page-header h2 {
+            margin: 0;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .page-header h2 i {
+            color: #3498db;
+            margin-right: 10px;
+        }
+        
+        /* Success Message */
+        #success-message {
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .plots-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .plots-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h2><i class="fas fa-building"></i> Plots Management</h2>
+                <a href="add_plot.html" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus"></i> Add New Plot
+                </a>
+            </div>
+            
+            <!-- Success Message -->
+            <div id="success-message" class="alert alert-success alert-dismissible fade show" role="alert" style="display: none;">
+                <span id="success-text"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <!-- Summary Cards -->
+            <div class="plots-summary">
+                <div class="summary-card total-plots">
+                    <i class="fas fa-building icon"></i>
+                    <div class="value" id="total-plots">0</div>
+                    <div class="label">Total Plots</div>
+                </div>
+                <div class="summary-card total-tenants">
+                    <i class="fas fa-users icon"></i>
+                    <div class="value" id="total-tenants">0</div>
+                    <div class="label">Total Tenants</div>
+                </div>
+                <div class="summary-card monthly-rent">
+                    <i class="fas fa-money-bill-wave icon"></i>
+                    <div class="value" id="total-rent">KES 0</div>
+                    <div class="label">Monthly Rent</div>
+                </div>
+                <div class="summary-card occupied">
+                    <i class="fas fa-home icon"></i>
+                    <div class="value" id="occupancy-rate">0%</div>
+                    <div class="label">Occupancy Rate</div>
+                </div>
+            </div>
+            
+            <!-- Plots Table -->
+            <div class="plots-table-container">
+                <div class="table-header">
+                    <h5><i class="fas fa-list me-2"></i>All Plots</h5>
+                </div>
+                <table class="table table-hover datatable" id="plots-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag"></i> ID</th>
+                            <th><i class="fas fa-building"></i> Plot Name</th>
+                            <th><i class="fas fa-map-marker-alt"></i> Location</th>
+                            <th><i class="fas fa-users"></i> Tenants</th>
+                            <th><i class="fas fa-money-bill"></i> Monthly Rent</th>
+                            <th><i class="fas fa-calendar"></i> Created</th>
+                            <th><i class="fas fa-cogs"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="../assets/js/script.js"></script>
+    
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user_id')) {
+            window.location.href = 'login.html';
+        }
+        
+        // Load sidebar
+        $('#sidebar-container').load('sidebar.html');
+        
+        // Check for message in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const msg = urlParams.get('msg');
+        if (msg) {
+            const messages = {
+                'added': 'Plot added successfully!',
+                'updated': 'Plot updated successfully!',
+                'deleted': 'Plot deleted successfully!'
+            };
+            if (messages[msg]) {
+                document.getElementById('success-text').textContent = messages[msg];
+                document.getElementById('success-message').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('success-message').style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Load plots data
+        function loadPlots() {
+            fetch('../php/plots.php')
+                .then(response => response.json())
+                .then(data => {
+                    // Update summary cards
+                    document.getElementById('total-plots').textContent = data.summary.total_plots;
+                    document.getElementById('total-tenants').textContent = data.summary.total_tenants;
+                    document.getElementById('total-rent').textContent = data.summary.total_rent;
+                    document.getElementById('occupancy-rate').textContent = data.summary.occupancy_rate + '%';
+                    
+                    const tbody = document.querySelector('#plots-table tbody');
+                    tbody.innerHTML = data.plots.map(plot => `
+                        <tr>
+                            <td><span class="badge bg-secondary">#${plot.id}</span></td>
+                            <td>
+                                <div class="plot-name-cell">
+                                    <div class="plot-icon">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                    <div>
+                                        <div class="plot-name">${plot.plot_name}</div>
+                                        <div class="location-text">${plot.location || 'Location not specified'}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${plot.location || 'N/A'}</td>
+                            <td><span class="tenant-count"><i class="fas fa-user"></i> ${plot.total_tenants}</span></td>
+                            <td><span class="rent-amount">${plot.total_rent}</span></td>
+                            <td>${plot.created_date}</td>
+                            <td>
+                                <a href="plot_details.html?id=${plot.id}" class="btn btn-action btn-view" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="edit_plot.html?id=${plot.id}" class="btn btn-action btn-edit" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="deletePlot(${plot.id})" class="btn btn-action btn-delete" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    
+                    // Reinitialize DataTable if not already initialized
+                    $('.datatable').each(function() {
+                        if (!$.fn.DataTable.isDataTable(this)) {
+                            $(this).DataTable({
+                                ordering: true,
+                                paging: true,
+                                searching: true,
+                                info: false,
+                                lengthChange: true,
+                                language: {
+                                    search: "Search plots:",
+                                    lengthMenu: "Show _MENU_ entries"
+                                }
+                            });
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading plots:', error));
+        }
+        
+        function deletePlot(id) {
+            if (confirm('Are you sure you want to delete this plot? This will also delete all associated tenants and payments.')) {
+                fetch('../php/plots.php?delete=' + id)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.href = 'plots.html?msg=deleted';
+                        }
+                    })
+                    .catch(error => console.error('Error deleting plot:', error));
+            }
+        }
+        
+        loadPlots();
+    </script>
+</body>
+</html>
+

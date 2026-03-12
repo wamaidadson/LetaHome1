@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent Arrears - Leta Homes Agency</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-exclamation-triangle"></i> Rent Arrears</h2>
+            </div>
+            
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="card-label">Tenants in Arrears</div>
+                                <div class="card-value" id="tenants-count">0</div>
+                            <div class="card-icon" style="background: #e74c3c;">
+                                <i class="fas fa-users"></i>
+                            </div>
+                    </div>
+                
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="card-label">Total Outstanding Arrears</div>
+                                <div class="card-value" id="total-arrears">KES 0.00</div>
+                            <div class="card-icon" style="background: #c0392b;">
+                                <i class="fas fa-money-bill"></i>
+                            </div>
+                    </div>
+            </div>
+            
+            <!-- Arrears Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h5>Tenants with Outstanding Arrears</h5>
+                    <button onclick="window.print()" class="btn btn-primary btn-sm">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                </div>
+                
+                <table class="table table-hover datatable">
+                    <thead>
+                        <tr>
+                            <th>Tenant ID</th>
+                            <th>Tenant Name</th>
+                            <th>Plot</th>
+                            <th>House No</th>
+                            <th>Monthly Rent</th>
+                            <th>Months Unpaid</th>
+                            <th>Outstanding Balance</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="arrears-tbody">
+                    </tbody>
+                </table>
+            </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="../assets/js/script.js"></script>
+    
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user_id')) {
+            window.location.href = 'login.html';
+        }
+        
+        // Load sidebar
+        $('#sidebar-container').load('sidebar.html');
+        
+        // Load arrears data
+        function loadArrears() {
+            fetch('../php/arrears.php')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('tenants-count').textContent = data.tenants_count;
+                    document.getElementById('total-arrears').textContent = data.total_arrears;
+                    
+                    const tbody = document.getElementById('arrears-tbody');
+                    if (data.tenants.length > 0) {
+                        tbody.innerHTML = data.tenants.map(tenant => `
+                            <tr>
+                                <td>${tenant.tenant_id}</td>
+                                <td>${tenant.tenant_name}</td>
+                                <td>${tenant.plot_name}</td>
+                                <td>${tenant.house_number}</td>
+                                <td>${tenant.rent_amount}</td>
+                                <td><span class="badge badge-danger">${tenant.months_unpaid} month(s)</span></td>
+                                <td><strong>${tenant.outstanding_balance}</strong></td>
+                                <td>
+                                    <a href="record_payment.html?tenant_id=${tenant.id}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-money-bill"></i> Record Payment
+                                    </a>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center">No tenants with arrears found</td></tr>';
+                    }
+                })
+                .catch(error => console.error('Error loading arrears:', error));
+        }
+        
+        loadArrears();
+    </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plot Details - Leta Homes Agency</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-building"></i> <span id="plot-name">Plot Details</span></h2>
+                <div>
+                    <a href="plots.html" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Plots
+                    </a>
+                    <a href="#" id="view-statement" class="btn btn-info">
+                        <i class="fas fa-file-invoice"></i> View Statement
+                    </a>
+                </div>
+            
+            <!-- Plot Information -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <h5>Plot Information</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Plot Name:</strong></td>
+                                <td id="plot-name-2">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Location:</strong></td>
+                                <td id="plot-location">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Created Date:</strong></td>
+                                <td id="plot-created">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <h5>Financial Summary</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Total Tenants:</strong></td>
+                                <td id="total-tenants">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Rent Collected:</strong></td>
+                                <td id="total-collected">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Unpaid Rent:</strong></td>
+                                <td id="total-unpaid">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Commission Earned:</strong></td>
+                                <td id="total-commission">-</td>
+                            </tr>
+                        </table>
+                    </div>
+            </div>
+            
+            <!-- Tenants List -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h5>Tenants in this Plot</h5>
+                    <a href="#" id="add-tenant-link" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Add New Tenant
+                    </a>
+                </div>
+                
+                <table class="table table-hover datatable" id="tenants-table">
+                    <thead>
+                        <tr>
+                            <th>Tenant ID</th>
+                            <th>Name</th>
+                            <th>House No</th>
+                            <th>House Type</th>
+                            <th>Rent Amount</th>
+                            <th>Deposit</th>
+                            <th>Commission</th>
+                            <th>Move In Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="../assets/js/script.js"></script>
+    
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user_id')) {
+            window.location.href = 'login.html';
+        }
+        
+        // Get plot ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const plotId = urlParams.get('id');
+        
+        if (!plotId) {
+            window.location.href = 'plots.html';
+        }
+        
+        // Load sidebar
+        $('#sidebar-container').load('sidebar.html');
+        
+        // Update links with plot ID
+        document.getElementById('view-statement').href = 'plot_statement.html?id=' + plotId;
+        document.getElementById('add-tenant-link').href = 'add_tenant.html?plot_id=' + plotId;
+        
+        // Load plot details
+        function loadPlotDetails() {
+            fetch('../php/plot_details.php?id=' + plotId)
+                .then(response => response.json())
+                .then(data => {
+                    // Update plot info
+                    document.getElementById('plot-name').textContent = data.plot.plot_name;
+                    document.getElementById('plot-name-2').textContent = data.plot.plot_name;
+                    document.getElementById('plot-location').textContent = data.plot.location || 'Not specified';
+                    document.getElementById('plot-created').textContent = data.plot.created_date;
+                    
+                    // Update financial summary
+                    document.getElementById('total-tenants').textContent = data.financial_summary.total_tenants;
+                    document.getElementById('total-collected').textContent = data.financial_summary.total_rent_collected;
+                    document.getElementById('total-unpaid').textContent = data.financial_summary.total_unpaid;
+                    document.getElementById('total-commission').textContent = data.financial_summary.total_commission;
+                    
+                    // Update tenants table
+                    const tbody = document.querySelector('#tenants-table tbody');
+                    tbody.innerHTML = data.tenants.map(tenant => `
+                        <tr>
+                            <td>${tenant.tenant_id}</td>
+                            <td>${tenant.tenant_name}</td>
+                            <td>${tenant.house_number}</td>
+                            <td>${tenant.house_type}</td>
+                            <td>${tenant.rent_amount}</td>
+                            <td>
+                                ${tenant.deposit_amount}
+                                <span class="badge ${tenant.deposit_paid === 'Yes' ? 'badge-active' : 'badge-unpaid'}">
+                                    ${tenant.deposit_paid}
+                                </span>
+                            </td>
+                            <td>${tenant.commission_percentage}%</td>
+                            <td>${tenant.move_in_date}</td>
+                            <td>
+                                <span class="badge ${tenant.status === 'Active' ? 'badge-active' : 'badge-moved'}">
+                                    ${tenant.status}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="tenant_statement.html?id=${tenant.id}" class="btn btn-sm btn-info btn-action" title="View Statement">
+                                    <i class="fas fa-file-invoice"></i>
+                                </a>
+                                <a href="edit_tenant.html?id=${tenant.id}" class="btn btn-sm btn-warning btn-action" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="record_payment.html?tenant_id=${tenant.id}" class="btn btn-sm btn-success btn-action" title="Record Payment">
+                                    <i class="fas fa-money-bill"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    `).join('');
+                    
+                    // Reinitialize DataTable if not already initialized
+                    $('.datatable').each(function() {
+                        if (!$.fn.DataTable.isDataTable(this)) {
+                            $(this).DataTable();
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading plot details:', error));
+        }
+        
+        loadPlotDetails();
+    </script>
+</body>
+</html>

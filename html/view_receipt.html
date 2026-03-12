@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Receipt - Leta Homes Agency</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+                <h2><i class="fas fa-receipt"></i> Payment Receipt</h2>
+                <div>
+                    <button onclick="window.print()" class="btn btn-primary me-2">
+                        <i class="fas fa-print"></i> Print Receipt
+                    </button>
+                    <a href="plots.html" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Payments
+                    </a>
+                </div>
+            
+            <div class="row">
+                <div class="col-md-8 offset-md-2">
+                    <div class="receipt-container" id="receipt">
+                        <div class="receipt-header">
+                            <h2>LETA HOMES AGENCY</h2>
+                            <p>Property Management Solutions</p>
+                            <h3>OFFICIAL RECEIPT</h3>
+                        </div>
+                        
+                        <div class="receipt-details">
+                            <table class="receipt-table">
+                                <tr>
+                                    <td>Receipt No:</td>
+                                    <td><strong id="receipt-number">-</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Date:</td>
+                                    <td id="generated-date">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Tenant ID:</td>
+                                    <td id="tenant-id">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Tenant Name:</td>
+                                    <td id="tenant-name">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Plot:</td>
+                                    <td id="plot-name">-</td>
+                                </tr>
+                                <tr>
+                                    <td>House Number:</td>
+                                    <td id="house-number">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Payment Date:</td>
+                                    <td id="payment-date">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Amount Paid:</td>
+                                    <td><strong id="amount-paid">-</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Commission:</td>
+                                    <td id="commission">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Payment For:</td>
+                                    <td id="payment-month">-</td>
+                                </tr>
+                            </table>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <p><strong>Amount in Words:</strong></p>
+                                <p id="amount-words">-</p>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; margin-top: 50px;">
+                                <div>
+                                    <p>_________________________</p>
+                                    <p>Received By</p>
+                                </div>
+                                <div>
+                                    <p>_________________________</p>
+                                    <p>Tenant's Signature</p>
+                                </div>
+                            
+                            <div class="receipt-footer">
+                                <p>This is a computer generated receipt. No signature required.</p>
+                                <p>Thank you for your payment!</p>
+                            </div>
+                    </div>
+            </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <style>
+    @media print {
+        body {
+            background: white;
+        }
+        .main-content {
+            margin: 0;
+            padding: 20px;
+        }
+        .receipt-container {
+            box-shadow: none;
+            padding: 0;
+        }
+    }
+    </style>
+
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user_id')) {
+            window.location.href = 'login.html';
+        }
+        
+        // Load sidebar
+        $('#sidebar-container').load('sidebar.html');
+        
+        // Get payment_id from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentId = urlParams.get('payment_id');
+        
+        if (!paymentId) {
+            window.location.href = 'plots.html';
+        }
+        
+        // Load receipt data
+        function loadReceipt() {
+            fetch('../php/view_receipt.php?payment_id=' + paymentId)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('receipt-number').textContent = data.receipt.receipt_number;
+                    document.getElementById('generated-date').textContent = data.receipt.generated_date;
+                    document.getElementById('tenant-id').textContent = data.receipt.tenant_id;
+                    document.getElementById('tenant-name').textContent = data.receipt.tenant_name;
+                    document.getElementById('plot-name').textContent = data.receipt.plot_name;
+                    document.getElementById('house-number').textContent = data.receipt.house_number;
+                    document.getElementById('payment-date').textContent = data.receipt.payment_date;
+                    document.getElementById('amount-paid').textContent = data.receipt.amount_paid;
+                    document.getElementById('commission').textContent = data.receipt.commission;
+                    document.getElementById('payment-month').textContent = data.receipt.payment_month;
+                    document.getElementById('amount-words').textContent = data.receipt.amount_words;
+                })
+                .catch(error => console.error('Error loading receipt:', error));
+        }
+        
+        loadReceipt();
+    </script>
+</body>
+</html>

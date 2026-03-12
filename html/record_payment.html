@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Payment - Leta Homes Agency</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-money-bill"></i> Record Rent Payment</h2>
+                <a href="plots.html" id="back-link" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8 offset-md-2">
+                    <div class="table-container">
+                        <h5 class="mb-4">Tenant Information</h5>
+                        <table class="table table-borderless mb-4">
+                            <tr>
+                                <td><strong>Tenant ID:</strong></td>
+                                <td id="tenant-id">-</td>
+                                <td><strong>Tenant Name:</strong></td>
+                                <td id="tenant-name">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Plot:</strong></td>
+                                <td id="plot-name">-</td>
+                                <td><strong>House Number:</strong></td>
+                                <td id="house-number">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Rent Amount:</strong></td>
+                                <td id="rent-amount">-</td>
+                                <td><strong>Commission:</strong></td>
+                                <td id="commission">-</td>
+                            </tr>
+                        </table>
+                        
+                        <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                        
+                        <form id="payment-form">
+                            <input type="hidden" id="tenant_id" name="tenant_id" value="">
+                            
+                            <div class="mb-3">
+                                <label for="payment_date" class="form-label">Payment Date *</label>
+                                <input type="date" class="form-control" id="payment_date" name="payment_date" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="amount_paid" class="form-label">Amount Paid (KSh) *</label>
+                                <input type="number" class="form-control" id="amount_paid" name="amount_paid" required>
+                                <div class="form-text" id="commission-text"></div>
+                            
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Record Payment & Generate Receipt
+                            </button>
+                        </form>
+                    </div>
+            </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/script.js"></script>
+    
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user_id')) {
+            window.location.href = 'login.html';
+        }
+        
+        // Load sidebar
+        $('#sidebar-container').load('sidebar.html');
+        
+        // Get tenant_id from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenantId = urlParams.get('tenant_id');
+        
+        if (!tenantId) {
+            window.location.href = 'plots.html';
+        }
+        
+        // Set default date
+        document.getElementById('payment_date').value = new Date().toISOString().split('T')[0];
+        
+        // Load tenant data
+        function loadTenantData() {
+            fetch('../php/record_payment.php?tenant_id=' + tenantId)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('tenant_id').value = data.tenant.id;
+                    document.getElementById('tenant-id').textContent = data.tenant.tenant_id;
+                    document.getElementById('tenant-name').textContent = data.tenant.tenant_name;
+                    document.getElementById('plot-name').textContent = data.tenant.plot_name;
+                    document.getElementById('house-number').textContent = data.tenant.house_number;
+                    document.getElementById('rent-amount').textContent = data.tenant.rent_amount;
+                    document.getElementById('commission').textContent = data.tenant.commission_percentage + '%';
+                    document.getElementById('amount_paid').value = data.tenant.rent_amount;
+                    document.getElementById('back-link').href = 'plot_details.html?id=' + data.tenant.plot_id;
+                    
+                    updateCommissionText(data.tenant.rent_amount, data.tenant.commission_percentage);
+                })
+                .catch(error => console.error('Error loading tenant:', error));
+        }
+        
+        function updateCommissionText(amount, percentage) {
+            const commission = (amount * percentage) / 100;
+            document.getElementById('commission-text').innerHTML = 
+                'Commission (' + percentage + '%) will be calculated automatically: KSh ' + 
+                commission.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+        
+        document.getElementById('amount_paid').addEventListener('input', function() {
+            const amount = parseFloat(this.value) || 0;
+            fetch('../php/record_payment.php?tenant_id=' + tenantId)
+                .then(response => response.json())
+                .then(data => {
+                    updateCommissionText(amount, data.tenant.commission_percentage);
+                });
+        });
+        
+        // Handle form submission
+        document.getElementById('payment-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('../php/record_payment.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'view_receipt.html?payment_id=' + data.payment_id;
+                } else {
+                    document.getElementById('error-message').textContent = data.message;
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+        
+        loadTenantData();
+    </script>
+</body>
+</html>

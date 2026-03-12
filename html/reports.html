@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Leta Homes Agency</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-chart-bar"></i> Reports</h2>
+            </div>
+            
+            <!-- Report Type Selector -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="table-container">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-report btn-primary" data-type="monthly">Monthly Rent Report</button>
+                            <button class="btn btn-report btn-outline-primary" data-type="plot">Plot Financial Report</button>
+                            <button class="btn btn-report btn-outline-primary" data-type="commission">Commission Report</button>
+                            <button class="btn btn-report btn-outline-primary" data-type="arrears">Arrears Report</button>
+                        </div>
+                </div>
+            
+            <!-- Report Display -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h5 id="report-title">Monthly Rent Collection Report</h5>
+                    <button onclick="window.print()" class="btn btn-primary btn-sm">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                </div>
+                
+                <table class="table table-hover datatable" id="report-table">
+                    <thead id="report-thead">
+                    </thead>
+                    <tbody id="report-tbody">
+                    </tbody>
+                    <tfoot id="report-tfoot" style="display: none;">
+                    </tfoot>
+                </table>
+            </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="../assets/js/script.js"></script>
+    
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user_id')) {
+            window.location.href = 'login.html';
+        }
+        
+        // Load sidebar
+        $('#sidebar-container').load('sidebar.html');
+        
+        // Get report type from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let reportType = urlParams.get('type') || 'monthly';
+        
+        // Update active button
+        updateButtons();
+        
+        // Handle button clicks
+        document.querySelectorAll('.btn-report').forEach(btn => {
+            btn.addEventListener('click', function() {
+                reportType = this.dataset.type;
+                updateButtons();
+                loadReport();
+            });
+        });
+        
+        function updateButtons() {
+            document.querySelectorAll('.btn-report').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+                if (btn.dataset.type === reportType) {
+                    btn.classList.remove('btn-outline-primary');
+                    btn.classList.add('btn-primary');
+                }
+            });
+        }
+        
+        // Report configurations
+        const reportConfig = {
+            monthly: {
+                title: 'Monthly Rent Collection Report',
+                columns: ['Month', 'Tenants Paid', 'Total Payments', 'Total Collected', 'Total Commission']
+            },
+            plot: {
+                title: 'Plot Financial Report',
+                columns: ['Plot Name', 'Total Tenants', 'Expected Rent', 'Collected Rent', 'Collection Rate', 'Total Commission']
+            },
+            commission: {
+                title: 'Commission Report',
+                columns: ['Month', 'Tenant', 'Plot', 'House', 'Rent Paid', 'Commission %', 'Commission Amount'],
+                hasFooter: true
+            },
+            arrears: {
+                title: 'Rent Arrears Report',
+                columns: ['Tenant ID', 'Tenant Name', 'Plot', 'House', 'Monthly Rent', 'Months Unpaid', 'Outstanding Balance'],
+                hasFooter: true
+            }
+        };
+        
+        function loadReport() {
+            // Update title
+            document.getElementById('report-title').textContent = reportConfig[reportType].title;
+            
+            // Fetch report data
+            fetch('../php/reports.php?type=' + reportType)
+                .then(response => response.json())
+                .then(data => {
+                    // Update table header
+                    const thead = document.getElementById('report-thead');
+                    thead.innerHTML = '<tr>' + reportConfig[reportType].columns.map(col => '<th>' + col + '</th>').join('') + '</tr>';
+                    
+                    // Update table body
+                    const tbody = document.getElementById('report-tbody');
+                    tbody.innerHTML = data.rows.map(row => '<tr>' + row.map(cell => '<td>' + cell + '</td>').join('') + '</tr>').join('');
+                    
+                    // Update footer if needed
+                    const tfoot = document.getElementById('report-tfoot');
+                    if (reportConfig[reportType].hasFooter && data.footer && data.footer.length > 0) {
+                        tfoot.style.display = 'table-footer-group';
+                        tfoot.innerHTML = '<tr>' + data.footer.map(cell => '<td>' + cell + '</td>').join('') + '</tr>';
+                    } else {
+                        tfoot.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error loading report:', error));
+        }
+        
+        loadReport();
+    </script>
+</body>
+</html>
