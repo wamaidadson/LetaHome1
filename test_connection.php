@@ -28,11 +28,11 @@ echo "<body>";
 echo "<h1>🗄️ Database Connection Test</h1>";
 
 // Database configuration
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "leta_homes";
-$port = "3306";
+$servername = $_ENV['MYSQL_ADDON_HOST'] ?? 'localhost';
+$username = $_ENV['MYSQL_ADDON_USER'] ?? 'root';
+$password = $_ENV['MYSQL_ADDON_PASSWORD'] ?? '';
+$dbname = $_ENV['MYSQL_ADDON_DB'] ?? 'leta_homes';
+$port = $_ENV['MYSQL_ADDON_PORT'] ?? '3306';
 
 echo "<h2>Configuration:</h2>";
 echo "<ul>";

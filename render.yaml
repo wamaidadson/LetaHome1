@@ -1,0 +1,29 @@
+services:
+  # Web Service for PHP app
+  - type: web
+    name: leta-homes-agency
+    env: php
+    plan: starter  # Free tier
+    buildCommand: echo "No build step required for static PHP app"
+    startCommand: echo "PHP app ready on port $PORT - No start command needed (apache/nginx auto-handles)"
+    
+    # Auto-detect port for Render
+    envVars:
+      - key: MYSQL_ADDON_HOST
+        sync: false  # Manual entry
+      - key: MYSQL_ADDON_DB
+        sync: false
+      - key: MYSQL_ADDON_USER
+        sync: false
+      - key: MYSQL_ADDON_PORT
+        sync: false
+      - key: MYSQL_ADDON_PASSWORD
+        sync: false
+      - key: PHP_VERSION
+        value: '8.2'
+    
+    # Disk for any temp files (optional)
+    disk:
+      name: data
+      mountPath: /tmp
+      sizeGB: 0.5

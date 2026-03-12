@@ -5,12 +5,12 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Database configuration
-define('DB_SERVER', 'localhost');
-define('DB_USERNAME', 'root');
-define('DB_PASSWORD', ''); // Leave empty for XAMPP default
-define('DB_NAME', 'leta_homes');
-define('DB_PORT', '3306'); // Default MySQL port
+// Database configuration - Supports Render/Clever Cloud env vars with local fallback
+define('DB_SERVER', $_ENV['MYSQL_ADDON_HOST'] ?? 'localhost');
+define('DB_USERNAME', $_ENV['MYSQL_ADDON_USER'] ?? 'root');
+define('DB_PASSWORD', $_ENV['MYSQL_ADDON_PASSWORD'] ?? '');
+define('DB_NAME', $_ENV['MYSQL_ADDON_DB'] ?? 'leta_homes');
+define('DB_PORT', $_ENV['MYSQL_ADDON_PORT'] ?? '3306');
 
 // Set timezone
 date_default_timezone_set('Africa/Nairobi');
