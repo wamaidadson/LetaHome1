@@ -1,55 +1,72 @@
 -- =====================================================
--- LETA HOMES AGENCY - Database Setup Script
+-- LETA HOMES AGENCY - Database Setup Script (Supabase PostgreSQL Ready)
 -- =====================================================
--- Run this script to create all necessary tables
--- for the Leta Homes Agency application
+-- Run this script in Supabase SQL Editor
 -- =====================================================
 
--- =====================================================
--- FOR HOSTING/cPanel: Create 'leta_homes' DB manually first!
--- 1. cPanel → MySQL Databases → Create DB 'leta_homes'
--- 2. Add user with ALL PRIVILEGES
--- 3. phpMyAdmin → Select leta_homes → Import this file
--- =====================================================
---LOCAL XAMPP: Run in terminal: mysql -u root -p < database.sql
---  OR Uncomment below (requires root privileges):
---CREATE DATABASE IF NOT EXISTS `leta_homes` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
---USE `leta_homes`;
+-- Enable required extensions (UUID for IDs if needed)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =====================================================
--- USERS TABLE - Stores user accounts
+-- DROP EXISTING (for idempotency)
 -- =====================================================
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+DROP VIEW IF EXISTS vw_monthly_reports CASCADE;
+DROP VIEW IF EXISTS vw_tenant_summary CASCADE;
+DROP TABLE IF EXISTS receipts CASCADE;
+DROP TABLE IF EXISTS rent_payments CASCADE;
+DROP TABLE IF EXISTS tenants CASCADE;
+DROP TABLE IF EXISTS plots CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TYPE IF EXISTS tenant_status CASCADE;
+DROP TYPE IF EXISTS deposit_status CASCADE;
+DROP TYPE IF EXISTS payment_status CASCADE;
+
+-- =====================================================
+-- ENUM TYPES
+-- =====================================================
+CREATE TYPE deposit_status AS ENUM ('Yes', 'No');
+CREATE TYPE tenant_status AS ENUM ('Active', 'Inactive', 'Moved Out');
+CREATE TYPE payment_status AS ENUM ('Pending', 'Paid', 'Partial', 'Cancelled');
+
+-- =====================================================
+-- USERS TABLE
+-- =====================================================
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
     user_id VARCHAR(20) UNIQUE NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE,
     password VARCHAR(255) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_username (username),
-    INDEX idx_user_id (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+DROP INDEX IF EXISTS idx_username;
+CREATE INDEX idx_username ON users (username);
+DROP INDEX IF EXISTS idx_user_id;
+CREATE INDEX idx_user_id ON users (user_id);
 
 -- =====================================================
--- PLOTS TABLE - Stores property/plots information
+-- PLOTS TABLE
 -- =====================================================
-CREATE TABLE IF NOT EXISTS plots (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+DROP TABLE IF EXISTS plots CASCADE;
+CREATE TABLE plots (
+    id SERIAL PRIMARY KEY,
     plot_name VARCHAR(100) NOT NULL,
     location VARCHAR(200),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_plot_name (plot_name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_plot_name ON plots (plot_name);
 
 -- =====================================================
--- TENANTS TABLE - Stores tenant information
+-- TENANTS TABLE
 -- =====================================================
-CREATE TABLE IF NOT EXISTS tenants (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE tenants (
+    id SERIAL PRIMARY KEY,
     tenant_id VARCHAR(20) UNIQUE NOT NULL,
-    plot_id INT NOT NULL,
+    plot_id INTEGER NOT NULL REFERENCES plots(id) ON DELETE CASCADE,
     tenant_name VARCHAR(100) NOT NULL,
     phone_number VARCHAR(20),
     house_number VARCHAR(20),
@@ -57,122 +74,139 @@ CREATE TABLE IF NOT EXISTS tenants (
     rent_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     commission_percentage DECIMAL(5, 2) NOT NULL DEFAULT 10.00,
     deposit_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    deposit_paid ENUM('Yes', 'No') DEFAULT 'No',\n    deposit_date DATE,
+    deposit_paid deposit_status DEFAULT 'No',
+    deposit_date DATE,
     move_in_date DATE,
-    status ENUM('Active', 'Inactive', 'Moved Out') DEFAULT 'Active',
-    UNIQUE KEY unique_house_plot (house_number, plot_id),
-    INDEX idx_deposit (deposit_paid, deposit_date)
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (plot_id) REFERENCES plots(id) ON DELETE CASCADE,
-    INDEX idx_tenant_id (tenant_id),
-    INDEX idx_plot_id (plot_id),
-    INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    status tenant_status DEFAULT 'Active',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (house_number, plot_id)
+);
+
+DROP INDEX IF EXISTS idx_deposit;
+CREATE INDEX idx_deposit ON tenants (deposit_paid, deposit_date);
+DROP INDEX IF EXISTS idx_tenant_id;
+CREATE INDEX idx_tenant_id ON tenants (tenant_id);
+DROP INDEX IF EXISTS idx_plot_id;
+CREATE INDEX idx_plot_id ON tenants (plot_id);
+DROP INDEX IF EXISTS idx_status;
+CREATE INDEX idx_status ON tenants (status);
 
 -- =====================================================
--- RENT PAYMENTS TABLE - Stores rent payment records
+-- RENT PAYMENTS TABLE
 -- =====================================================
-CREATE TABLE IF NOT EXISTS rent_payments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    tenant_id INT NOT NULL,
+DROP TABLE IF EXISTS rent_payments CASCADE;
+CREATE TABLE rent_payments (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     payment_date DATE NOT NULL,
-    amount_paid DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    commission_percentage DECIMAL(5, 2) NOT NULL DEFAULT 10.00,
-    commission_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    payment_status ENUM('Pending', 'Paid', 'Partial', 'Cancelled') DEFAULT 'Paid',
-payment_month DATE NOT NULL,
-    payment_year YEAR NOT NULL,
+    amount_paid DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    commission_percentage DECIMAL(5,2) NOT NULL DEFAULT 10.00,
+    commission_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    payment_status payment_status DEFAULT 'Paid',
+    payment_month DATE NOT NULL,
+    payment_year INTEGER NOT NULL,
     notes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    INDEX idx_tenant_id (tenant_id),
-    INDEX idx_payment_date (payment_date),
-    INDEX idx_payment_month (payment_month),
-    INDEX idx_payment_status (payment_status),
-    INDEX idx_payment_year (payment_year)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+DROP INDEX IF EXISTS idx_tenant_id;
+CREATE INDEX idx_tenant_id ON rent_payments (tenant_id);
+DROP INDEX IF EXISTS idx_payment_date;
+CREATE INDEX idx_payment_date ON rent_payments (payment_date);
+DROP INDEX IF EXISTS idx_payment_month;
+CREATE INDEX idx_payment_month ON rent_payments (payment_month);
+DROP INDEX IF EXISTS idx_payment_status;
+CREATE INDEX idx_payment_status ON rent_payments (payment_status);
+DROP INDEX IF EXISTS idx_payment_year;
+CREATE INDEX idx_payment_year ON rent_payments (payment_year);
 
 -- =====================================================
--- VIEW: Tenant Summary (for arrears/statements)
+-- RECEIPTS TABLE
+-- =====================================================
+DROP TABLE IF EXISTS receipts CASCADE;
+CREATE TABLE receipts (
+    id SERIAL PRIMARY KEY,
+    receipt_number VARCHAR(30) UNIQUE NOT NULL,
+    payment_id INTEGER NOT NULL REFERENCES rent_payments(id) ON DELETE CASCADE,
+    tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+DROP INDEX IF EXISTS idx_receipt_number;
+CREATE INDEX idx_receipt_number ON receipts (receipt_number);
+DROP INDEX IF EXISTS idx_payment_id;
+CREATE INDEX idx_payment_id ON receipts (payment_id);
+DROP INDEX IF EXISTS idx_tenant_id;
+CREATE INDEX idx_tenant_id ON receipts (tenant_id);
+
+-- =====================================================
+-- VIEWS
 -- =====================================================
 CREATE OR REPLACE VIEW vw_tenant_summary AS
 SELECT 
     t.id, t.tenant_id, t.tenant_name, t.plot_id, p.plot_name,
     t.house_number, t.house_type, t.rent_amount, t.move_in_date, t.status,
     t.deposit_amount, t.deposit_paid, t.deposit_date,
-    COALESCE(SUM(rp.amount_paid), 0) as total_paid,
-    COUNT(rp.id) as payments_count,
-    ROUND((DATEDIFF(CURDATE(), t.move_in_date)/30) * t.rent_amount - COALESCE(SUM(rp.amount_paid), 0), 2) as arrears
+    COALESCE(SUM(rp.amount_paid), 0) AS total_paid,
+    COUNT(rp.id) AS payments_count,
+    ROUND((EXTRACT(EPOCH FROM age(NOW(), t.move_in_date))/2629746)::numeric * t.rent_amount - COALESCE(SUM(rp.amount_paid),0), 2) AS arrears
 FROM tenants t
 LEFT JOIN plots p ON t.plot_id = p.id
-LEFT JOIN rent_payments rp ON t.id = rp.tenant_id AND rp.payment_status = 'Paid'
-GROUP BY t.id;
+LEFT JOIN rent_payments rp ON t.id = rp.tenant_id AND rp.payment_status='Paid'
+GROUP BY t.id, p.plot_name;
 
--- =====================================================
--- VIEW: Monthly Reports
--- =====================================================
 CREATE OR REPLACE VIEW vw_monthly_reports AS
 SELECT 
-    YEAR(payment_date) as year,
-    MONTH(payment_date) as month,
-    COUNT(*) as total_payments,
-    SUM(amount_paid) as total_collected,
-    SUM(commission_amount) as total_commission,
-    AVG(commission_percentage) as avg_commission_rate
-FROM rent_payments 
-WHERE payment_status = 'Paid'
-GROUP BY YEAR(payment_date), MONTH(payment_date)
+    EXTRACT(YEAR FROM payment_date) AS year,
+    EXTRACT(MONTH FROM payment_date) AS month,
+    COUNT(*) AS total_payments,
+    SUM(amount_paid) AS total_collected,
+    SUM(commission_amount) AS total_commission,
+    AVG(commission_percentage) AS avg_commission_rate
+FROM rent_payments
+WHERE payment_status='Paid'
+GROUP BY EXTRACT(YEAR FROM payment_date), EXTRACT(MONTH FROM payment_date)
 ORDER BY year DESC, month DESC;
 
-
 -- =====================================================
--- RECEIPTS TABLE - Stores receipt information
--- =====================================================
-CREATE TABLE IF NOT EXISTS receipts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    receipt_number VARCHAR(30) UNIQUE NOT NULL,
-    payment_id INT NOT NULL,
-    tenant_id INT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (payment_id) REFERENCES rent_payments(id) ON DELETE CASCADE,
-    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    INDEX idx_receipt_number (receipt_number),
-    INDEX idx_payment_id (payment_id),
-    INDEX idx_tenant_id (tenant_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- =====================================================
--- INSERT DEFAULT ADMIN USER (if not exists)
+-- DEFAULT ADMIN USER
 -- =====================================================
 INSERT INTO users (user_id, full_name, username, email, password)
-SELECT 'USR-2026-0001', 'Administrator', 'admin', 'admin@leta.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
-FROM DUAL
-WHERE NOT EXISTS (SELECT username FROM users WHERE username = 'admin');
+SELECT 'USR-2026-0001','Administrator','admin','admin@leta.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE username='admin');
 
 -- =====================================================
--- SAMPLE DATA - Insert sample plots and tenants (for testing)
+-- SAMPLE PLOTS
 -- =====================================================
+INSERT INTO plots (plot_name, location) VALUES
+('Sunrise Apartments','Kenyatta Avenue, Nairobi'),
+('Green Valley Heights','Mombasa Road, Nairobi'),
+('Riverside Gardens','Kiserian Road, Nairobi'),
+('Metro Plaza','Central Business District, Nairobi')
+ON CONFLICT DO NOTHING;
 
--- Sample plots
-INSERT INTO plots (plot_name, location) VALUES 
-('Sunrise Apartments', 'Kenyatta Avenue, Nairobi'),
-('Green Valley Heights', 'Mombasa Road, Nairobi'),
-('Riverside Gardens', 'Kiserian Road, Nairobi'),
-('Metro Plaza', 'Central Business District, Nairobi')
-ON DUPLICATE KEY UPDATE location = VALUES(location);
+-- =====================================================
+-- SAMPLE TENANTS
+-- =====================================================
+INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, deposit_amount, deposit_paid, deposit_date, move_in_date, status)
+SELECT 'TH-2026-0001', id, 'John Doe', '0722123456', '101', '1 Bedroom', 15000.00, 10.00, 30000.00, 'Yes','2026-01-01','2026-01-01','Active'
+FROM plots WHERE plot_name='Sunrise Apartments'
+ON CONFLICT DO NOTHING;
 
--- Sample tenants (only if plots exist and no tenants yet)
-INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, deposit_amount, deposit_paid, deposit_date, move_in_date, status)\nSELECT 'TH-2026-0001', p.id, 'John Doe', '0722123456', '101', '1 Bedroom', 15000.00, 10.00, 30000.00, 'Yes', '2026-01-01', '2026-01-01', 'Active'\nFROM plots p WHERE p.plot_name = 'Sunrise Apartments'\nAND NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'TH-2026-0001');
+INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, deposit_amount, deposit_paid, deposit_date, move_in_date, status)
+SELECT 'TH-2026-0002', id, 'Jane Smith', '0722987654', '202', '2 Bedroom', 25000.00, 10.00, 50000.00, 'Yes','2026-01-15','2026-01-15','Active'
+FROM plots WHERE plot_name='Green Valley Heights'
+ON CONFLICT DO NOTHING;
 
-INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, deposit_amount, deposit_paid, deposit_date, move_in_date, status)\nSELECT 'TH-2026-0002', p.id, 'Jane Smith', '0722987654', '202', '2 Bedroom', 25000.00, 10.00, 50000.00, 'Yes', '2026-01-15', '2026-01-15', 'Active'\nFROM plots p WHERE p.plot_name = 'Green Valley Heights'\nAND NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'TH-2026-0002');
-
-INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, deposit_amount, deposit_paid, deposit_date, move_in_date, status)\nSELECT 'TH-2026-0003', p.id, 'Michael Johnson', '0711234567', 'A1', 'Studio', 10000.00, 10.00, 0.00, 'No', NULL, '2026-02-01', 'Active'\nFROM plots p WHERE p.plot_name = 'Riverside Gardens'\nAND NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'TH-2026-0003');
+INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, deposit_amount, deposit_paid, deposit_date, move_in_date, status)
+SELECT 'TH-2026-0003', id, 'Michael Johnson', '0711234567','A1','Studio',10000.00,10.00,0.00,'No',NULL,'2026-02-01','Active'
+FROM plots WHERE plot_name='Riverside Gardens'
+ON CONFLICT DO NOTHING;
 
 -- =====================================================
 -- VERIFY DATABASE SETUP
 -- =====================================================
-SELECT 'Database setup completed successfully!' AS status;
-SELECT 'Tables created:' AS info;
-SHOW TABLES;
+SELECT 'Database setup completed successfully for Supabase PostgreSQL!' AS status;
+SELECT tablename FROM pg_tables WHERE schemaname = 'public';
 
