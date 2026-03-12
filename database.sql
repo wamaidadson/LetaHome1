@@ -1,4 +1,4 @@
- x-- =====================================================
+-- =====================================================
 -- LETA HOMES AGENCY - Database Setup Script
 -- =====================================================
 -- Run this script to create all necessary tables
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(100) NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE,
-    password VARCHAR(255) NOT NULL,am
+    password VARCHAR(255) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_username (username),
     INDEX idx_user_id (user_id)
@@ -57,10 +57,7 @@ CREATE TABLE IF NOT EXISTS tenants (
     rent_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     commission_percentage DECIMAL(5, 2) NOT NULL DEFAULT 10.00,
     deposit_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    deposit_paid ENUM('Yes', 'No') DEFAULT 'No',
-    deposit_date DATE,
-    deposit_paid ENUM('Yes', 'No') DEFAULT 'No',
-    deposit_date DATE,
+    deposit_paid ENUM('Yes', 'No') DEFAULT 'No',\n    deposit_date DATE,
     move_in_date DATE,
     status ENUM('Active', 'Inactive', 'Moved Out') DEFAULT 'Active',
     UNIQUE KEY unique_house_plot (house_number, plot_id),
@@ -166,20 +163,11 @@ INSERT INTO plots (plot_name, location) VALUES
 ON DUPLICATE KEY UPDATE location = VALUES(location);
 
 -- Sample tenants (only if plots exist and no tenants yet)
-INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, move_in_date, status)
-SELECT 'TH-2026-0001', p.id, 'John Doe', '0722123456', '101', '1 Bedroom', 15000.00, 10.00, 30000.00, 'Yes', '2026-01-01', '2026-01-01', 'Active'
-FROM plots p WHERE p.plot_name = 'Sunrise Apartments'
-AND NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'TH-2026-0001');
+INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, deposit_amount, deposit_paid, deposit_date, move_in_date, status)\nSELECT 'TH-2026-0001', p.id, 'John Doe', '0722123456', '101', '1 Bedroom', 15000.00, 10.00, 30000.00, 'Yes', '2026-01-01', '2026-01-01', 'Active'\nFROM plots p WHERE p.plot_name = 'Sunrise Apartments'\nAND NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'TH-2026-0001');
 
-INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, move_in_date, status)
-SELECT 'TH-2026-0002', p.id, 'Jane Smith', '0722987654', '202', '2 Bedroom', 25000.00, 10.00, 50000.00, 'Yes', '2026-01-15', '2026-01-15', 'Active'
-FROM plots p WHERE p.plot_name = 'Green Valley Heights'
-AND NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'TH-2026-0002');
+INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, deposit_amount, deposit_paid, deposit_date, move_in_date, status)\nSELECT 'TH-2026-0002', p.id, 'Jane Smith', '0722987654', '202', '2 Bedroom', 25000.00, 10.00, 50000.00, 'Yes', '2026-01-15', '2026-01-15', 'Active'\nFROM plots p WHERE p.plot_name = 'Green Valley Heights'\nAND NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'TH-2026-0002');
 
-INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, move_in_date, status)
-SELECT 'TH-2026-0003', p.id, 'Michael Johnson', '0711234567', 'A1', 'Studio', 10000.00, 10.00, '2026-02-01', 'Active'
-FROM plots p WHERE p.plot_name = 'Riverside Gardens'
-AND NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'TH-2026-0003');
+INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, deposit_amount, deposit_paid, deposit_date, move_in_date, status)\nSELECT 'TH-2026-0003', p.id, 'Michael Johnson', '0711234567', 'A1', 'Studio', 10000.00, 10.00, 0.00, 'No', NULL, '2026-02-01', 'Active'\nFROM plots p WHERE p.plot_name = 'Riverside Gardens'\nAND NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'TH-2026-0003');
 
 -- =====================================================
 -- VERIFY DATABASE SETUP
