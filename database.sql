@@ -1,13 +1,20 @@
--- =====================================================
+ x-- =====================================================
 -- LETA HOMES AGENCY - Database Setup Script
 -- =====================================================
 -- Run this script to create all necessary tables
 -- for the Leta Homes Agency application
 -- =====================================================
 
--- Create database if not exists
-CREATE DATABASE IF NOT EXISTS leta_homes;
-USE leta_homes;
+-- =====================================================
+-- FOR HOSTING/cPanel: Create 'leta_homes' DB manually first!
+-- 1. cPanel → MySQL Databases → Create DB 'leta_homes'
+-- 2. Add user with ALL PRIVILEGES
+-- 3. phpMyAdmin → Select leta_homes → Import this file
+-- =====================================================
+--LOCAL XAMPP: Run in terminal: mysql -u root -p < database.sql
+--  OR Uncomment below (requires root privileges):
+--CREATE DATABASE IF NOT EXISTS `leta_homes` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+--USE `leta_homes`;
 
 -- =====================================================
 -- USERS TABLE - Stores user accounts
@@ -18,7 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(100) NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,am
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_username (username),
     INDEX idx_user_id (user_id)
@@ -52,8 +59,12 @@ CREATE TABLE IF NOT EXISTS tenants (
     deposit_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     deposit_paid ENUM('Yes', 'No') DEFAULT 'No',
     deposit_date DATE,
+    deposit_paid ENUM('Yes', 'No') DEFAULT 'No',
+    deposit_date DATE,
     move_in_date DATE,
     status ENUM('Active', 'Inactive', 'Moved Out') DEFAULT 'Active',
+    UNIQUE KEY unique_house_plot (house_number, plot_id),
+    INDEX idx_deposit (deposit_paid, deposit_date)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (plot_id) REFERENCES plots(id) ON DELETE CASCADE,
@@ -73,15 +84,50 @@ CREATE TABLE IF NOT EXISTS rent_payments (
     commission_percentage DECIMAL(5, 2) NOT NULL DEFAULT 10.00,
     commission_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     payment_status ENUM('Pending', 'Paid', 'Partial', 'Cancelled') DEFAULT 'Paid',
-    payment_month DATE NOT NULL,
+payment_month DATE NOT NULL,
+    payment_year YEAR NOT NULL,
     notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     INDEX idx_tenant_id (tenant_id),
     INDEX idx_payment_date (payment_date),
     INDEX idx_payment_month (payment_month),
-    INDEX idx_payment_status (payment_status)
+    INDEX idx_payment_status (payment_status),
+    INDEX idx_payment_year (payment_year)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- VIEW: Tenant Summary (for arrears/statements)
+-- =====================================================
+CREATE OR REPLACE VIEW vw_tenant_summary AS
+SELECT 
+    t.id, t.tenant_id, t.tenant_name, t.plot_id, p.plot_name,
+    t.house_number, t.house_type, t.rent_amount, t.move_in_date, t.status,
+    t.deposit_amount, t.deposit_paid, t.deposit_date,
+    COALESCE(SUM(rp.amount_paid), 0) as total_paid,
+    COUNT(rp.id) as payments_count,
+    ROUND((DATEDIFF(CURDATE(), t.move_in_date)/30) * t.rent_amount - COALESCE(SUM(rp.amount_paid), 0), 2) as arrears
+FROM tenants t
+LEFT JOIN plots p ON t.plot_id = p.id
+LEFT JOIN rent_payments rp ON t.id = rp.tenant_id AND rp.payment_status = 'Paid'
+GROUP BY t.id;
+
+-- =====================================================
+-- VIEW: Monthly Reports
+-- =====================================================
+CREATE OR REPLACE VIEW vw_monthly_reports AS
+SELECT 
+    YEAR(payment_date) as year,
+    MONTH(payment_date) as month,
+    COUNT(*) as total_payments,
+    SUM(amount_paid) as total_collected,
+    SUM(commission_amount) as total_commission,
+    AVG(commission_percentage) as avg_commission_rate
+FROM rent_payments 
+WHERE payment_status = 'Paid'
+GROUP BY YEAR(payment_date), MONTH(payment_date)
+ORDER BY year DESC, month DESC;
+
 
 -- =====================================================
 -- RECEIPTS TABLE - Stores receipt information
@@ -121,12 +167,12 @@ ON DUPLICATE KEY UPDATE location = VALUES(location);
 
 -- Sample tenants (only if plots exist and no tenants yet)
 INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, move_in_date, status)
-SELECT 'TH-2026-0001', p.id, 'John Doe', '0722123456', '101', '1 Bedroom', 15000.00, 10.00, '2026-01-01', 'Active'
+SELECT 'TH-2026-0001', p.id, 'John Doe', '0722123456', '101', '1 Bedroom', 15000.00, 10.00, 30000.00, 'Yes', '2026-01-01', '2026-01-01', 'Active'
 FROM plots p WHERE p.plot_name = 'Sunrise Apartments'
 AND NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'TH-2026-0001');
 
 INSERT INTO tenants (tenant_id, plot_id, tenant_name, phone_number, house_number, house_type, rent_amount, commission_percentage, move_in_date, status)
-SELECT 'TH-2026-0002', p.id, 'Jane Smith', '0722987654', '202', '2 Bedroom', 25000.00, 10.00, '2026-01-15', 'Active'
+SELECT 'TH-2026-0002', p.id, 'Jane Smith', '0722987654', '202', '2 Bedroom', 25000.00, 10.00, 50000.00, 'Yes', '2026-01-15', '2026-01-15', 'Active'
 FROM plots p WHERE p.plot_name = 'Green Valley Heights'
 AND NOT EXISTS (SELECT 1 FROM tenants WHERE tenant_id = 'TH-2026-0002');
 

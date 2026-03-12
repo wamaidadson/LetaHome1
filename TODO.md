@@ -1,37 +1,34 @@
-# Render Deployment TODO for Leta Homes Agency
+# Leta Homes Agency - Database Enhancement TODO
 
-## Plan Breakdown & Progress Tracking
+**Status: [IN PROGRESS]**
 
-### 1. ✅ Update Database Configuration Files [Completed]
-- [x] Edit `config.php` to use environment variables with local fallback
-- [x] Edit `php/config.php` to sync changes
-- [x] Update `test_connection.php` for env var support
+## Step 1: [PENDING] ✅ Update database.sql with deposit columns, views, indexes, and samples
+- Add deposit_amount, deposit_paid, deposit_date to tenants table
+- Update sample tenants with deposit data
+- Add vw_tenant_summary and vw_monthly_reports views
+- Add UNIQUE INDEX on tenants(house_number, plot_id)
+- Add INDEX on rent_payments(payment_year)
+- Uncomment/fix XAMPP automation section with warnings
 
-### 3. ✅ Create Deployment Files [Completed]
-- [x] Created `render.yaml` for Render service config
-- [x] Created `RENDER_DEPLOY_GUIDE.md` with full instructions
-- [ ] Create `render.yaml` for Render service config
-- [ ] Create/update `README.md` with full deployment guide
-- [ ] Update `.gitignore` if needed (ignore local SQL dumps)
+## Step 2: [PENDING] Update setup_database.php admin password hash
+- Change to match database.sql: `$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi` ('password')
 
-### 4. GitHub Preparation [Manual]
-- [ ] Initialize git repo: `git init`
-- [ ] Add remote: `git remote add origin <your-github-repo>`
-- [ ] Commit: `git add . && git commit -m "Prepare for Render deploy"`
-- [ ] Push: `git push -u origin main`
+## Step 3: [PENDING] Deprecate add_deposit_columns.php
+- Add header comment: DEPRECATED - use database.sql instead
+- Mark as safe to delete after verification
 
-### 5. Deploy on Render [Manual]
-- [ ] New → Web Service → Connect GitHub repo
-- [ ] Runtime: PHP
-- [ ] Build: `echo "No build required"`
-- [ ] Add Clever Cloud DB as external resource
-- [ ] Auto-deploy enabled
-- [ ] Test live URL, check logs for DB connection
+## Step 4: [PENDING] Test & Verify
+```
+1. mysql -u root -p < database.sql
+2. Check phpMyAdmin: tables, columns, samples, views
+3. php setup_database.php (should detect existing)
+4. App test: localhost/leta_homes_agency → login admin/password
+5. Test CRUD + payments + statements
+```
 
-### 6. Post-Deployment [Manual]
-- [ ] Test login, add tenant/plot, record payment
-- [ ] Customize domain if needed
-- [ ] Monitor logs
+## Step 5: [PENDING] Documentation
+- Update README/QUICK_START_GUIDE.md with new features
+- Confirm RENDER deployment compatibility
 
-**Current Status: Code changes done. Next: User runs DB import on Clever Cloud, pushes to GitHub, deploys on Render.**
+**Next Action:** Complete Step 1 → Mark as done → Proceed to Step 2
 
