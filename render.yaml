@@ -9,16 +9,10 @@ services:
     
     # Auto-detect port for Render
     envVars:
-      - key: MYSQL_ADDON_HOST
-        sync: false  # Manual entry
-      - key: MYSQL_ADDON_DB
+      - key: SUPABASE_PASSWORD
         sync: false
-      - key: MYSQL_ADDON_USER
-        sync: false
-      - key: MYSQL_ADDON_PORT
-        sync: false
-      - key: MYSQL_ADDON_PASSWORD
-        sync: false
+      - key: PHP_VERSION
+        value: '8.2'
       - key: PHP_VERSION
         value: '8.2'
     

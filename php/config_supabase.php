@@ -6,7 +6,7 @@ ini_set('display_errors', 1);
 date_default_timezone_set('Africa/Nairobi');
 
 // Supabase PostgreSQL Connection
-define('DB_DSN', 'postgresql://postgres:[YOUR-PASSWORD]@db.bvecgfpvogpmapquoaoc.supabase.co:5432/postgres');
+define('DB_DSN', 'postgresql://postgres.' . ($_ENV['SUPABASE_PASSWORD'] ?? '[YOUR-PASSWORD]') . '@db.bvecgfpvogpmapquoaoc.supabase.co:5432/postgres');
 define('DB_PASSWORD', '');  // Replace [YOUR-PASSWORD] above or set env
 
 /**
