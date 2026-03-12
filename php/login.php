@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $user_count_result = mysqli_query($conn, "SELECT COUNT(*) as count FROM users");
     $user_count = mysqli_fetch_assoc($user_count_result)['count'];
     if ($user_count == 0) {
-        $admin_password = password_hash('admin123', PASSWORD_DEFAULT);
+$admin_password = password_hash('password', PASSWORD_DEFAULT);
         $insert_admin = "INSERT INTO users (user_id, full_name, username, email, password, created_at) 
                          VALUES ('USR-2026-0001', 'Administrator', 'admin', 'admin@leta.com', '$admin_password', NOW())";
         mysqli_query($conn, $insert_admin);

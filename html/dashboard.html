@@ -203,10 +203,7 @@
     <script src="../assets/js/script.js"></script>
     
     <script>
-        // Check authentication
-        if (!localStorage.getItem('user_id')) {
-            window.location.href = 'login.html';
-        }
+        checkAuth();
         
         // Set current date
         const options = { year: 'numeric', month: 'long', day: 'numeric' };

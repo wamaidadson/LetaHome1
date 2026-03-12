@@ -1,28 +1,31 @@
-// Check authentication on each page
-function checkAuth() {
-    const userId = localStorage.getItem('user_id');
-    const username = localStorage.getItem('username');
-    const fullName = localStorage.getItem('full_name');
-    
-    if (!userId) {
+// Server-side authentication check
+async function checkAuth() {
+    try {
+        const response = await fetch('../php/check_auth.php');
+        const data = await response.json();
+        
+        if (!data.authenticated) {
+            window.location.href = data.redirect || 'login.html';
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('Auth check error:', error);
         window.location.href = 'login.html';
         return false;
     }
-    return true;
 }
 
-// Store user data after login
-function setUserData(user) {
-    localStorage.setItem('user_id', user.id);
-    localStorage.setItem('username', user.username);
-    localStorage.setItem('full_name', user.full_name);
-}
+// No client storage needed - server session handles
 
-// Clear user data on logout
-function clearUserData() {
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('username');
-    localStorage.removeItem('full_name');
+// Server-side logout
+async function logout() {
+    try {
+        await fetch('../php/logout.php');
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+    window.location.href = 'login.html';
 }
 
 // Format money (for JavaScript use)

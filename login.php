@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = mysqli_fetch_assoc($result);
         
         // For demo purposes, using plain text password (in production, use password_verify)
-        if ($password == 'admin123') {
+if ($password == 'password') {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['full_name'] = $user['full_name'];
@@ -134,7 +134,7 @@ $page_title = 'Login - Leta Homes Agency';
         </form>
         
         <div class="login-footer">
-            <p>Default Login: admin / admin123</p>
+<p>Default Login: admin / password</p>
             <p>&copy; 2026 Leta Homes Agency. All rights reserved.</p>
         </div>
     </div>

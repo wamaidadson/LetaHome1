@@ -97,15 +97,14 @@
         
         <div class="login-footer">
             <p>Don't have an account? <a href="signup.html" style="color: #667eea; text-decoration: none; font-weight: 600;">Sign up here</a></p>
-            <p>Default Login: admin / admin123</p>
+<p>Default Login: admin / password</p>
             <p>&copy; 2026 Leta Homes Agency. All rights reserved.</p>
         </div>
 
     <script>
-        // Check if already logged in
-        if (localStorage.getItem('user_id')) {
-            window.location.href = 'dashboard.html';
-        }
+        checkAuth().then(auth => {
+            if (auth) window.location.href = 'dashboard.html';
+        });
 
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -119,10 +118,6 @@ fetch('../php/login_pdo.php', {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Store user info in localStorage
-                    localStorage.setItem('user_id', data.user_id);
-                    localStorage.setItem('username', data.username);
-                    localStorage.setItem('full_name', data.full_name);
                     window.location.href = 'dashboard.html';
                 } else {
                     document.getElementById('error-text').textContent = data.message;
