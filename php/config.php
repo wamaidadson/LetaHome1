@@ -1,41 +1,37 @@
 <?php
-// Database configuration for Leta Homes Agency
+// Database configuration for Leta Homes Agency - PostgreSQL (Supabase)
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Database configuration - Supports Render/Clever Cloud env vars with local fallback
-define('DB_SERVER', $_ENV['MYSQL_ADDON_HOST'] ?? 'localhost');
-define('DB_USERNAME', $_ENV['MYSQL_ADDON_USER'] ?? 'root');
-define('DB_PASSWORD', $_ENV['MYSQL_ADDON_PASSWORD'] ?? '');
-define('DB_NAME', $_ENV['MYSQL_ADDON_DB'] ?? 'leta_homes');
-define('DB_PORT', $_ENV['MYSQL_ADDON_PORT'] ?? '3306');
-
 date_default_timezone_set('Africa/Nairobi');
 
+// Database credentials - UPDATE [YOUR-PASSWORD]
+define('DB_HOST', $_ENV['DB_HOST'] ?? 'db.bvecgfpvogpmapquoaoc.supabase.co');
+define('DB_PORT', $_ENV['DB_PORT'] ?? '5432');
+define('DB_NAME', $_ENV['DB_NAME'] ?? 'postgres');
+define('DB_USER', $_ENV['DB_USER'] ?? 'postgres');
+define('DB_PASSWORD', $_ENV['DB_PASSWORD'] ?? '[YOUR-PASSWORD]');
+
 /**
- * Create database connection
+ * Create database connection (PDO PostgreSQL)
  */
 function getDatabaseConnection() {
+    $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";user=" . DB_USER . ";password=" . DB_PASSWORD;
+    
     try {
-        $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME, DB_PORT);
-        
-        if ($conn->connect_error) {
-            throw new Exception("Connection failed: " . $conn->connect_error);
-        }
-        
-        if (!$conn->set_charset("utf8mb4")) {
-            throw new Exception("Error setting charset: " . $conn->error);
-        }
-        
-        return $conn;
-        
-    } catch (Exception $e) {
-        error_log("Database Connection Error: " . $e->getMessage());
-        die("Database Connection Error: " . $e->getMessage());
+        $pdo = new PDO($dsn, DB_USER, DB_PASSWORD, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]);
+        return $pdo;
+    } catch (PDOException $e) {
+        error_log("DB Error: " . $e->getMessage());
+        die("Database Connection Failed - check password/host");
     }
 }
 
-$conn = getDatabaseConnection();
+$pdo = getDatabaseConnection();
 
 /**
  * Check if user is logged in
@@ -53,27 +49,5 @@ function requireLogin() {
 function formatMoney($amount) {
     return 'KES ' . number_format($amount, 2);
 }
-
-/**
- * Generate unique tenant ID
- */
-function generateTenantID($conn) {
-    $year = date('Y');
-    $result = mysqli_query($conn, "SELECT COUNT(*) as count FROM tenants WHERE tenant_id LIKE 'TEN-$year%'");
-    $row = mysqli_fetch_assoc($result);
-    $num = $row['count'] + 1;
-    return 'TEN-' . $year . str_pad($num, 4, '0', STR_PAD_LEFT);
-}
-
-/**
- * Generate receipt number
- */
-function generateReceiptNumber($conn) {
-    $year = date('Y');
-    $month = date('m');
-    $result = mysqli_query($conn, "SELECT COUNT(*) as count FROM receipts WHERE receipt_number LIKE 'RCP-$year$month%'");
-    $row = mysqli_fetch_assoc($result);
-    $num = $row['count'] + 1;
-    return 'RCP-' . $year . $month . str_pad($num, 4, '0', STR_PAD_LEFT);
-}
 ?>
+

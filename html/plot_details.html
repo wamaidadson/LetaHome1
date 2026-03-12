@@ -108,9 +108,7 @@
     
     <script>
         // Check authentication
-        if (!localStorage.getItem('user_id')) {
-            window.location.href = 'login.html';
-        }
+        checkAuth();
         
         // Get plot ID from URL
         const urlParams = new URLSearchParams(window.location.search);

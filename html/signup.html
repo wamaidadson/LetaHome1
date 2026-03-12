@@ -217,9 +217,9 @@
 
     <script>
         // Check if already logged in
-        if (localStorage.getItem('user_id')) {
-            window.location.href = 'dashboard.html';
-        }
+        checkAuth().then(auth => {
+            if (auth) window.location.href = 'dashboard.html';
+        });
 
         document.getElementById('signup-form').addEventListener('submit', function(e) {
             e.preventDefault();
