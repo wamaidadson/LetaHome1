@@ -2,7 +2,7 @@
 -- Run in phpMyAdmin or mysql CLI: mysql -u root -p leta_homes_agency < database_mysql.sql
 
 -- Drop existing for clean setup
-DROP VIEW IF EXISTS `vw_monthly_reports`;
+DROP VIEW IF EXISTS vw_monthly_reports;
 DROP VIEW IF EXISTS `vw_tenant_summary`;
 DROP TABLE IF EXISTS `receipts`;
 DROP TABLE IF EXISTS `rent_payments`;
@@ -11,7 +11,7 @@ DROP TABLE IF EXISTS `plots`;
 DROP TABLE IF EXISTS `users`;
 
 -- USERS TABLE
-CREATE TABLE `users` (
+CREATE TABLE users (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` VARCHAR(20) UNIQUE NOT NULL,
     `full_name` VARCHAR(100) NOT NULL,
