@@ -7,13 +7,8 @@
 session_start();
 header('Content-Type: application/json');
 
-// Allow only POST requests
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-    exit();
-}
-
-require_once 'config.php';
+echo json_encode(['success' => false, 'message' => 'Signup disabled - Admin only system. Use login.php with admin/password.']);
+exit();
 
 // Get and sanitize input
 $full_name = sanitizeInput($_POST['full_name'] ?? '');
