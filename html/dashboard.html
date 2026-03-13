@@ -214,7 +214,7 @@
         
         // Load dashboard data
         function loadDashboard() {
-            fetch('../php/dashboard.php')
+        fetch('../php/dashboard_pdo.php')
                 .then(response => response.json())
                 .then(data => {
                     // Update stats
